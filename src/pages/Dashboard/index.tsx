@@ -1,8 +1,9 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useState, FormEvent } from 'react'
 import { FiChevronRight } from 'react-icons/fi'
 import api from '../../services/api'
 
-import { Title, Form, Repositories } from './style'
+import { Title, Form, Repositories, Error } from './style'
 import logoImg from '../../assets/logo.svg'
 
 interface Repository {
@@ -16,22 +17,33 @@ interface Repository {
 
 const Dashboard: React.FC = () => {
   const [inputNewValue, setInputNewValue] = useState('')
+  const [inputError, setInputError] = useState('')
   const [repositories, setRepositories] = useState<Repository[]>([])
 
   async function handlAddRepository (event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
+    if (!inputNewValue) {
+      setInputError('Digite o autor/nome do repositório')
+      return
+    }
 
-    const response = await api.get<Repository>(`repos/${inputNewValue}`)
-    const repository = response.data
-    setRepositories([...repositories, repository])
-    setInputNewValue('')
+    try {
+      const response = await api.get<Repository>(`repos/${inputNewValue}`)
+
+      const repository = response.data
+      setRepositories([...repositories, repository])
+      setInputNewValue('')
+      setInputError('')
+    } catch (err) {
+      setInputError('Repositório não encontrado')
+    }
   }
 
   return (
     <>
       <img src={logoImg} alt="Logo" />
       <Title>Explore repositórios no GitHub</Title>
-      <Form onSubmit={handlAddRepository}>
+      <Form hasError= {!!inputError} onSubmit={handlAddRepository}>
         <input
           placeholder="Digite o nome do repositório"
           value={inputNewValue}
@@ -39,6 +51,9 @@ const Dashboard: React.FC = () => {
         />
         <button type="submit">Pesquisar</button>
       </Form>
+
+      {inputError && <Error>{inputError}</Error>}
+
       <Repositories>
         {repositories.map(repository => (
           <a key={repository.full_name} href="">
