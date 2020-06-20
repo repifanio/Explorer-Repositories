@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import React, { useState, FormEvent } from 'react'
+import React, { useState, useEffect, FormEvent } from 'react'
 import { FiChevronRight } from 'react-icons/fi'
 import api from '../../services/api'
 
@@ -18,7 +18,19 @@ interface Repository {
 const Dashboard: React.FC = () => {
   const [inputNewValue, setInputNewValue] = useState('')
   const [inputError, setInputError] = useState('')
-  const [repositories, setRepositories] = useState<Repository[]>([])
+  const [repositories, setRepositories] = useState<Repository[]>(() => {
+    const repositoriesLocalStorage = localStorage.getItem('@ExplorerRepositorios:repositorios')
+
+    if (repositoriesLocalStorage) {
+      return JSON.parse(repositoriesLocalStorage)
+    } else {
+      return []
+    }
+  })
+
+  useEffect(() => {
+    localStorage.setItem('@ExplorerRepositorios:repositorios', JSON.stringify(repositories))
+  }, [repositories])
 
   async function handlAddRepository (event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
